@@ -4,9 +4,10 @@ namespace Krimt\UniqueSlug;
 
 class UniqueSlug
 {
-    public static function generate($model, $title, $field, $separator = "-"): string
+    public static function generate($model, $title, $field, $separator = null): string
     {
         $id = 0;
+        $separator= empty($separator) ? config('unique-slug.separator') : $separator;
 
         $slug = preg_replace('/\s+/', $separator, (trim(strtolower($title))));
         $slug = preg_replace('/\?+/', $separator, (trim(strtolower($slug))));
@@ -25,13 +26,14 @@ class UniqueSlug
         // This cuts the queries down by doing it once.
         $allSlugs = static::getRelatedSlugs($slug, $id, $model, $field);
 
+//        return ($allSlugs);
         // If we haven't used it before then we are all good.
         if (!$allSlugs->contains("$field", $slug)) {
             return $slug;
         }
 
         // Just append numbers like a savage until we find not used.
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= config('unique-slug.max_count'); $i++) {
             $newSlug = $slug . $separator . $i;
             if (!$allSlugs->contains("$field", $newSlug)) {
                 return $newSlug;
